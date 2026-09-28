@@ -1,6 +1,16 @@
-board = {1: ' ', 2: ' ', 3: ' ',
-         4: ' ', 5: ' ', 6: ' ',
-         7: ' ', 8: ' ', 9: ' '}
+# Tic-Tac-Toe with a pre-given initial state; the AI (X) moves first.
+# No standard algorithm (no Minimax): the bot uses simple rules only.
+
+# ---------- Initial state (edit this like the 8-puzzle start board) ----------
+# Positions:   1 2 3
+#              4 5 6
+#              7 8 9
+# Rule: number of X must equal number of O, so it is X's (the AI's) turn.
+initial_state = ['X', ' ', ' ',
+                 'O', 'O', ' ',
+                 ' ', 'X', ' ']
+
+board = {i + 1: initial_state[i] for i in range(9)}
 
 win_conditions = [(1, 2, 3), (4, 5, 6), (7, 8, 9),  # Horizontal
                   (1, 4, 7), (2, 5, 8), (3, 6, 9),  # Vertical
@@ -35,10 +45,6 @@ def checkDraw():
 
 
 def insertLetter(letter, position):
-    if not spaceFree(position):
-        position = int(input('Position taken. Enter new position: '))
-        return insertLetter(letter, position)
-
     board[position] = letter
     printBoard(board)
 
@@ -53,9 +59,7 @@ def insertLetter(letter, position):
 
 def findWinningMove(mark):
     # Returns a position that completes a line for 'mark', or None.
-    # This is plain rule-checking, not a search algorithm: for each
-    # empty cell we just check whether placing 'mark' there finishes
-    # one of the fixed win_conditions.
+    # Plain rule-checking: try each empty cell and see if it finishes a line.
     for pos in board:
         if board[pos] == ' ':
             board[pos] = mark          # try the move
@@ -67,28 +71,44 @@ def findWinningMove(mark):
 
 
 def compMove():
+    print("Bot (X) plays:")
     # 1. Win now if possible.
     move = findWinningMove(bot)
     # 2. Otherwise block the player's winning move.
     if move is None:
         move = findWinningMove(player)
-    # 3. Otherwise prefer the center, then a corner, then any free cell.
+    # 3. Otherwise prefer the center, then corners, then edges.
     if move is None:
         for pos in [5, 1, 3, 7, 9, 2, 4, 6, 8]:
             if board[pos] == ' ':
                 move = pos
                 break
-
     return insertLetter(bot, move)
 
 
 def playerMove():
-    position = int(input('Enter position for O (1-9): '))
-    return insertLetter(player, position)
+    while True:
+        try:
+            choice = int(input('Enter position for O (1-9): '))
+        except ValueError:
+            print("Please enter a number from 1 to 9.")
+            continue
+        if choice < 1 or choice > 9 or not spaceFree(choice):
+            print("Invalid position! Please try again.")
+            continue
+        return insertLetter(player, choice)
 
 
-game_over = False
-while not game_over:
-    game_over = playerMove()
-    if not game_over:
-        game_over = compMove()
+print("output USN : 1WN24CS074")
+print("Initial state:")
+printBoard(board)
+
+if checkWin() or checkDraw():
+    print("The initial state is already finished. Please change it.")
+else:
+    game_over = False
+    while not game_over:
+        game_over = compMove()          # AI moves first
+        if not game_over:
+            game_over = playerMove()
+
